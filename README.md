@@ -27,13 +27,27 @@ pip install -r requirements.txt
 
 ### 2. Configure API credentials (optional)
 
-Copy the example env file and add your CreatorIQ credentials:
+API keys are stored in **Streamlit secrets** — never in the app code.
+
+Copy the example secrets file and add your CreatorIQ credentials:
 
 ```bash
-cp .env.example .env
+cp .streamlit/secrets.toml.example .streamlit/secrets.toml
+```
+
+Edit `.streamlit/secrets.toml`:
+
+```toml
+[creatoriq]
+api_key = "your_actual_api_key"
+org_name = "your_organization_name"
 ```
 
 Obtain an API key from your CreatorIQ contact or email support@creatoriq.com.
+
+**Important:** `.streamlit/secrets.toml` is gitignored and should never be committed.
+
+For **Streamlit Community Cloud**, paste the same `[creatoriq]` block in your app's **Secrets** settings in the dashboard.
 
 ### 3. Run the app
 
@@ -45,7 +59,7 @@ Open the URL shown in your terminal (typically http://localhost:8501).
 
 ## Demo mode
 
-Demo mode is enabled by default so you can explore the dashboard without API credentials. Toggle it off in the sidebar and enter your API key to load live CreatorIQ data.
+Demo mode is enabled by default so you can explore the dashboard without API credentials. Add your API key to `.streamlit/secrets.toml`, then toggle demo mode off to load live CreatorIQ data.
 
 ## CreatorIQ API endpoints
 
@@ -82,7 +96,7 @@ src/
   metrics/activation.py # Quarterly activation calculations
   data/mock_data.py     # Demo dataset
 requirements.txt
-.env.example
+.streamlit/secrets.toml.example
 ```
 
 ## License

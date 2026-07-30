@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import os
 from datetime import date
 from typing import Any
 
@@ -10,13 +9,11 @@ import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 import streamlit as st
-from dotenv import load_dotenv
 
 from src.api.client import CreatorIQAPIError, CreatorIQClient
+from src.config import credentials_configured, get_creatoriq_credentials
 from src.data.mock_data import generate_demo_data
 from src.metrics.activation import build_activation_summary, get_quarter_date_range, quarter_label
-
-load_dotenv()
 
 st.set_page_config(
     page_title="Creator Activation Dashboard",
@@ -128,12 +125,15 @@ def render_sidebar() -> dict[str, Any]:
 
     use_demo = st.sidebar.toggle("Demo mode", value=True, help="Explore the dashboard with sample data")
 
-    api_key = os.getenv("CREATORIQ_API_KEY", "")
-    org_name = os.getenv("CREATORIQ_ORG_NAME", "")
+    api_key, org_name = get_creatoriq_credentials()
 
     if not use_demo:
-        api_key = st.sidebar.text_input("API Key", value=api_key, type="password")
-        org_name = st.sidebar.text_input("Organization Name", value=org_name)
+        if credentials_configured():
+            st.sidebar.success("CreatorIQ credentials loaded from secrets.")
+        else:
+            st.sidebar.warning(
+                "Add your API key to `.streamlit/secrets.toml` (see `.streamlit/secrets.toml.example`)."
+            )
 
     year = st.sidebar.selectbox("Year", options=list(range(CURRENT_YEAR - 2, CURRENT_YEAR + 2)), index=2)
     quarter = st.sidebar.selectbox(
@@ -194,10 +194,17 @@ def main() -> None:
 
     if settings["use_demo"]:
         publishers, posts, conversions, campaigns = load_demo_data(settings["year"], settings["quarter"])
-        st.info("Demo mode is on. Connect your CreatorIQ API key in the sidebar to load live program data.")
+        st.info(
+            "Demo mode is on. Add your CreatorIQ API key to `.streamlit/secrets.toml` "
+            "and turn off demo mode to load live program data."
+        )
     else:
-        if not settings["api_key"]:
-            st.warning("Enter your CreatorIQ API key in the sidebar or enable demo mode.")
+        if not credentials_configured():
+            st.warning(
+                "CreatorIQ credentials are not configured. Copy `.streamlit/secrets.toml.example` "
+                "to `.streamlit/secrets.toml`, add your API key, then restart the app. "
+                "Or enable demo mode to explore sample data."
+            )
             st.stop()
 
         try:
